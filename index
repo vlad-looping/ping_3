@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.arc text {
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+
+
+@font-face {
+  font-family: Posterama;
+  src: url('Monotype  - Posterama Text.otf');
+}
+
+.arc path {
+  stroke: #fff;
+}
+
+
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+
+
+height = 500;
+width = 960;
+margin = ({top: 20, right: 0, bottom: 50, left: 40});
+
+
+data = [
+  {year: 2017, "Banner Advertising" : 46099, "Video Advertising": 25868, "Search Advertising": 90225, "Social Media Advertising": 55398, "Classifieds" :17516},
+  {year: 2018, "Banner Advertising" : 49471, "Video Advertising": 28538, "Search Advertising": 101648, "Social Media Advertising": 67504, "Classifieds" :18115},
+  {year: 2019, "Banner Advertising" : 52921, "Video Advertising": 31210, "Search Advertising": 113237, "Social Media Advertising": 79622, "Classifieds" :18800},
+  {year: 2020, "Banner Advertising" : 56139, "Video Advertising": 33627, "Search Advertising": 123856, "Social Media Advertising": 90592, "Classifieds" :19527},
+  {year: 2021, "Banner Advertising" : 58878, "Video Advertising": 35608, "Search Advertising": 132651, "Social Media Advertising": 99593, "Classifieds" :20239},
+  {year: 2022, "Banner Advertising" : 61021, "Video Advertising": 37099, "Search Advertising": 139331, "Social Media Advertising": 106368, "Classifieds" :20889},
+  {year: 2023, "Banner Advertising" : 62584, "Video Advertising": 38146, "Search Advertising": 144087, "Social Media Advertising": 111129, "Classifieds" :21437}
+  ]
+
+
+stack = d3.stack()
+    .keys( ["Banner Advertising", "Video Advertising", "Search Advertising", "Social Media Advertising", "Classifieds"] )
+
+chartData = stack( data )
+
+
+colors = d3.scaleOrdinal()
+    .domain([ "Banner Advertising", "Video Advertising", "Search Advertising", "Social Media Advertising", "Classifieds"])
+    .range(['#81131f', '#964851', '#a7747a', '#b89ea1', '#c9c9c9'])
+
+    xScale = d3.scaleBand(
+      data.map(d => d.year),
+      [ margin.left, width - margin.right ]
+    ).padding(0.2)
+
+
+    yScale = d3.scaleLinear(
+      [0, d3.max(stack(data), d => d3.max(d, d => d[1]))],
+      [ height - margin.bottom, margin.top ]
+    )
+
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+
+    groups = svg.append('g')
+        // Each layer of the stack goes in a group
+        // the group contains that layer for all countries
+        .selectAll('g')
+        .data( chartData )
+        .join('g')
+          // rects in the same layer will all have the same color, so we can put it on the group
+          // we can use the key on the layer's array to set the color
+          .style('fill', (d,i) => colors(d.key))
+
+      groups.selectAll('rect')
+        // Now we place the rects, which are the children of the layer array
+        .data(d => d)
+        .join('rect')
+          .attr('x', d => xScale(d.data.year))
+          .attr('y', d => yScale(0))
+          .attr('height', 0)
+          .attr('width', xScale.bandwidth())
+
+       groups.selectAll('rect')
+        // Now we place the rects, which are the children of the layer array
+          .transition()
+          .duration(1000)
+          .ease(d3.easeCubicOut)
+          .attr('y', d => yScale(d[1]))
+          .attr('height', d => yScale(d[0]) - yScale(d[1]))
+
+      groups.selectAll('text')
+          .data(d => d)
+          .join('text')
+          .attr("x", function(d) { return (xScale(d.data.year)+ xScale.bandwidth()/2 - 20);})
+          .attr("y", function(d) { return  yScale(d[1]) + 20;})
+          .style('font-family', 'sans-serif')
+          .style('font-size' , 20)
+          .style('fill', 'transparent')
+          .transition()
+          .delay(1000)
+          .ease(d3.easeCubicOut)
+          .text(function(d) { return d3.format(".3s")(d[1] - d[0]) ;  })
+          .style('fill', 'white')
+
+
+
+
+       svg.selectAll("years")
+          .data(data)
+          .enter()
+          .append("text")
+          .attr("x", function(d) { return (xScale(d.year) + xScale.bandwidth()/2 - 35);})
+          .attr("y", function(d) { return height - 10; })
+          .text(function(d) { return d.year; })
+          .style('font-family', 'sans-serif')
+          .style('font-size' , 32)
+
+
+
+
+
+</script>
